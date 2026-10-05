@@ -43,10 +43,9 @@ class MaisenExtendetMailVarServiceProvider extends ServiceProvider
         });
         
         \Eventy::addFilter('mail_vars.replace', function($vars, $data) {
-            if (!empty($data['conversation'])) {
-                $data['conversation']->load(['threads' => function ($query) {
-                    $query->latest('created_at')->first();
-                }]);
+            // Une conversation pas encore enregistrée (nouvelle conversation) n'a pas d'id :
+            // charger ses threads fait indexer un tableau par null, ce qui lève une erreur sous PHP 8.5.
+            if (!empty($data['conversation']) && $data['conversation']->exists) {
                 $first_thread = $data['conversation']->threads()->first();
                 $vars['{%conversation.firstmessage%}'] = ($first_thread) ? $first_thread->body : '';
             }
